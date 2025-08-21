@@ -1,12 +1,14 @@
 using CoffeeShop.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddDbContext<CoffeeShopContext>();
+builder.Services.AddDbContext<CoffeeShopContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultDatabase")));
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
@@ -14,6 +16,9 @@ builder.Services.AddSwaggerGen(c =>
         Title = "CoffeeShop API",
         Version = "v1"
     });
+
+	var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+	c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 
 var app = builder.Build();

@@ -6,30 +6,30 @@ namespace CoffeeShop.Controllers
 {
 
 	/// <summary>
-	/// Controller for Items
+	/// Controller for the users
 	/// </summary>
 	[Route("api/[controller]")]
-	public class ItemsController : Controller
+	public class UsersController : Controller
 	{
 
 		private readonly CoffeeShopContext _context;
 
 		/// <inheritdoc/>
-		public ItemsController(CoffeeShopContext context)
+		public UsersController(CoffeeShopContext context)
 		{
 			_context = context;
 		}
 
 		/// <summary>
-		/// Get list of all items
+		/// Get list of all users
 		/// </summary>
-		/// <returns>List of all items</returns>
+		/// <returns>List of all users</returns>
 		[HttpGet]
-		public async Task<ActionResult<IList<Item>>> Get()
+		public async Task<ActionResult<IList<User>>> Get()
 		{
 			try
 			{
-				IList<Item> result = await _context.Items.ToListAsync();
+				IList<User> result = await _context.Users.Include(c => c.Role).ToListAsync();
 
 				if (result.Count == 0)
 				{
@@ -45,17 +45,17 @@ namespace CoffeeShop.Controllers
 		}
 
 		/// <summary>
-		/// Get item with specific ID
+		/// Get user with specific ID
 		/// </summary>
-		/// <param name="id">ID of the item</param>
+		/// <param name="id">ID of the user</param>
 		/// <returns>Item</returns>
 		[HttpGet]
 		[Route("{id:int}")]
-		public async Task<ActionResult<Item>> Get(int id)
+		public async Task<ActionResult<User>> Get(int id)
 		{
 			try
 			{
-				Item result = await _context.Items.SingleAsync(x => x.Id == id);
+				User result = await _context.Users.Include(c => c.Role).SingleAsync(x => x.Id == id);
 
 				if (result == null)
 				{
@@ -71,18 +71,18 @@ namespace CoffeeShop.Controllers
 		}
 
 		/// <summary>
-		/// Add new item
+		/// Add new user
 		/// </summary>
-		/// <param name="newItem">New item data</param>
+		/// <param name="newUser">New user data</param>
 		/// <returns>Action result</returns>
 		[HttpPost]
-		public async Task<ActionResult> Post(ItemDTO newItem)
+		public async Task<ActionResult> Post(UserDTO newUser)
 		{
-			Item item = Item.FromDTO(newItem);
+			User user = Data.User.FromDTO(newUser);
 
 			try
 			{
-				await _context.Items.AddAsync(item);
+				await _context.Users.AddAsync(user);
 				await _context.SaveChangesAsync();
 				return Ok();
 			}
@@ -93,31 +93,30 @@ namespace CoffeeShop.Controllers
 		}
 
 		/// <summary>
-		/// Update item or add new item if item with ID doesnt exists
+		/// Update user or add new user if user with ID doesnt exists
 		/// </summary>
-		/// <param name="item">Item data</param>
-		/// <param name="id">Item ID for update</param>
+		/// <param name="user">User data</param>
+		/// <param name="id">User ID for update</param>
 		/// <returns>Action result</returns>
 		[HttpPut]
 		[Route("{id:int}")]
-		public async Task<ActionResult> Put(ItemDTO item, int id)
+		public async Task<ActionResult> Put(UserDTO user, int id)
 		{
 			try
 			{
-				Item result = await _context.Items.SingleAsync(x => x.Id == id);
+				User result = await _context.Users.SingleAsync(x => x.Id == id);
 				if (result == null)
 				{
-					Item newItem = Item.FromDTO(item);
+					User newUser = Data.User.FromDTO(user);
 
-					await _context.Items.AddAsync(newItem);
+					await _context.Users.AddAsync(newUser);
 					await _context.SaveChangesAsync();
 					return Created();
 				}
 				else
 				{
-					result.Name = item.Name;
-					result.Price = item.Price;
-					result.ImgURL = item.ImgURL;
+					result.Name = user.Name;
+					result.RoleId = user.RoleId;
 
 					await _context.SaveChangesAsync();
 					return Ok();
@@ -130,9 +129,9 @@ namespace CoffeeShop.Controllers
 		}
 
 		/// <summary>
-		/// Delete item with specific ID
+		/// Delete user with specific ID
 		/// </summary>
-		/// <param name="id">Item ID</param>
+		/// <param name="id">User ID</param>
 		/// <returns>Action result</returns>
 		[HttpDelete]
 		[Route("{id:int}")]
@@ -140,14 +139,14 @@ namespace CoffeeShop.Controllers
 		{
 			try
 			{
-				Item result = await _context.Items.SingleAsync(x => x.Id == id);
+				User result = await _context.Users.SingleAsync(x => x.Id == id);
 				if (result == null)
 				{
 					return NotFound();
 				}
 				else
 				{
-					_context.Items.Remove(result);
+					_context.Users.Remove(result);
 					await _context.SaveChangesAsync();
 					return NoContent();
 				}
@@ -157,5 +156,6 @@ namespace CoffeeShop.Controllers
 				return BadRequest();
 			}
 		}
+
 	}
 }
